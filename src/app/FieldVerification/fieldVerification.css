@@ -1,0 +1,73 @@
+.field-verification {
+    margin-top: 4px;
+}
+
+.field-verification__card {
+    background: rgba(15, 23, 42, 0.03);
+    border: 1px solid var(--border-ui);
+    border-radius: 6px;
+    padding: 10px 12px;
+    position: relative;
+}
+
+.field-verification__infra-badge {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 3px 7px;
+    border-radius: 3px;
+    background: rgba(41, 128, 185, 0.1);
+    color: var(--accent-blue);
+    display: inline-block;
+    margin-bottom: 8px;
+}
+
+.field-verification__description {
+    font-family: var(--font-sans);
+    font-size: 10px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0 0 10px 0;
+}
+
+.field-verification__annotations {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.field-verification__annotation {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.field-verification__annotation-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--accent-amber);
+    opacity: 0.6;
+    flex-shrink: 0;
+}
+
+.field-verification__annotation-text {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--accent-amber);
+    letter-spacing: 0.3px;
+}
+
+.field-verification__simulated-label {
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px solid var(--border-ui);
+    font-family: var(--font-mono);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    color: var(--text-muted);
+    opacity: 0.4;
+    text-align: center;
+}

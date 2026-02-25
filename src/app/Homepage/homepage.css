@@ -1,0 +1,94 @@
+.homepage-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at center, #ffffff 0%, #f1f5f9 70%);
+    pointer-events: none;
+}
+
+.homepage__content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.homepage__title {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.homepage__title-grid {
+    font-family: var(--font-sans);
+    font-size: 42px;
+    font-weight: 200;
+    letter-spacing: 12px;
+    color: var(--text-primary);
+    opacity: 0.8;
+}
+
+.homepage__title-sentinel {
+    font-family: var(--font-sans);
+    font-size: 42px;
+    font-weight: 700;
+    letter-spacing: 8px;
+    color: var(--accent-blue);
+    opacity: 0.8;
+}
+
+.homepage__subtitle {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    opacity: 0.6;
+}
+
+.homepage__signals {
+    display: flex;
+    gap: 32px;
+    margin-top: 24px;
+}
+
+.homepage__signal {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.homepage__signal-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.homepage__signal-dot--online {
+    background: var(--accent-green);
+    opacity: 0.7;
+    box-shadow: 0 0 6px rgba(39, 174, 96, 0.4);
+}
+
+.homepage__signal-value {
+    font-weight: 600;
+    color: var(--text-primary);
+    opacity: 0.6;
+}
+
+.homepage__scanlines {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(0deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 0, 0, 0.005) 2px,
+            rgba(0, 0, 0, 0.005) 4px);
+    pointer-events: none;
+}

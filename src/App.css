@@ -1,0 +1,80 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  position: relative;
+}
+
+.app__body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.app__sidebar {
+  width: 300px;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-ui);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.app__sidebar--hidden {
+  opacity: 0;
+  transform: translateX(-20px);
+  pointer-events: none;
+}
+
+.app__main {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+.app__timeline {
+  flex-shrink: 0;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.app__timeline--hidden {
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+}
+
+/* State-driven visual modes */
+.app--investigation {
+  --ui-saturation: 0.9;
+  --ui-anim-speed: 0.5;
+}
+
+.app--monitoring {
+  --ui-saturation: 0.6;
+  --ui-anim-speed: 1.0;
+}
+
+.app--boot {
+  --ui-saturation: 0.2;
+  --ui-anim-speed: 0.3;
+}
+
+.app--suspicion {
+  --ui-saturation: 0.75;
+  --ui-anim-speed: 0.8;
+}
+
+.app--resolution {
+  --ui-saturation: 1.0;
+  --ui-anim-speed: 0.3;
+}
+
+/* When geographic context is open, dim the 3D grid slightly */
+.app__main--geo-active canvas {
+  opacity: 0.5;
+  transition: opacity 0.6s ease;
+}

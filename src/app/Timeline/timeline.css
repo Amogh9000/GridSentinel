@@ -1,0 +1,120 @@
+.timeline {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border-ui);
+    gap: 16px;
+    height: 56px;
+    flex-shrink: 0;
+}
+
+.timeline__label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 140px;
+    flex-shrink: 0;
+}
+
+.timeline__label-text {
+    font-family: var(--font-sans);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    opacity: 0.8;
+}
+
+.timeline__position {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.timeline__track {
+    flex: 1;
+    height: 32px;
+    background: rgba(15, 23, 42, 0.04);
+    border: 1px solid var(--border-ui);
+    border-radius: 6px;
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.timeline__anomaly-band {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    pointer-events: none;
+    border-radius: 1px;
+    transition: opacity 0.2s ease;
+}
+
+.timeline__anomaly-band--low {
+    background: rgba(180, 83, 9, 0.15);
+}
+
+.timeline__anomaly-band--medium {
+    background: rgba(180, 83, 9, 0.35);
+}
+
+.timeline__anomaly-band--high {
+    background: rgba(220, 38, 38, 0.45);
+}
+
+.timeline__day-sep {
+    position: absolute;
+    top: 0;
+    width: 1px;
+    height: 100%;
+    background: var(--border-ui);
+    pointer-events: none;
+}
+
+.timeline__playhead {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    pointer-events: none;
+    z-index: 2;
+    transform: translateX(-50%);
+}
+
+.timeline__playhead-line {
+    width: 2px;
+    height: 100%;
+    background: var(--accent-blue);
+    box-shadow: 0 0 10px rgba(37, 99, 235, 0.3);
+    margin: 0 auto;
+}
+
+.timeline__playhead-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent-blue);
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: absolute;
+    top: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.timeline__day-label {
+    position: absolute;
+    bottom: 4px;
+    transform: translateX(-50%);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--text-muted);
+    opacity: 0.5;
+    pointer-events: none;
+    user-select: none;
+}
