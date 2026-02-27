@@ -1,5 +1,8 @@
 import { useGridStore } from '../state/gridStore';
+import type { Feeder } from '../state/gridStore';
 import { useUIStore } from '../state/uiStore';
+import { useAlertStore } from '../state/alertStore';
+import type { Alert } from '../state/alertStore';
 
 // Simulated WebSocket feed — pushes feeder state updates every 5s
 let intervalId: ReturnType<typeof setInterval> | null = null;
@@ -14,7 +17,7 @@ export function startWebSocket(): () => void {
         // Only drift state while monitoring or in suspicion mode
         if (uiState === 'investigation' || uiState === 'resolution' || uiState === 'boot') return;
 
-        feeders.forEach((feeder) => {
+        feeders.forEach((feeder: Feeder) => {
             const healthDrift = (Math.random() - 0.5) * 0.02;
             const confDrift = (Math.random() - 0.5) * 0.015;
 
@@ -40,6 +43,14 @@ export function startWebSocket(): () => void {
                     confidence: Math.round(newConf * 1000) / 1000,
                     status: newStatus,
                 });
+
+                // Trigger evaluation tracking the updated telemetry confidence stream matching alert feeds
+                const { alerts, evaluateEscalation } = useAlertStore.getState();
+                const matchedAlert = alerts.find((a: Alert) => a.feederId === feeder.id);
+
+                if (matchedAlert) {
+                    evaluateEscalation(matchedAlert.id);
+                }
             }
         });
     }, 5000);

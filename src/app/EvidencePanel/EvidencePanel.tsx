@@ -1,10 +1,11 @@
 import { useEffect, useRef, useMemo, useState } from 'react';
-import { useAlertStore, type ConfidencePoint } from '../../state/alertStore';
+import { useAlertStore, type ConfidencePoint, type Alert } from '../../state/alertStore';
 import { useUIStore } from '../../state/uiStore';
 import { TIMESERIES_DATA } from '../../data/mockData';
 import * as d3 from 'd3';
 import gsap from 'gsap';
 import FieldVerification from '../FieldVerification/FieldVerification';
+import PredictionBox from './PredictionBox';
 import './evidencePanel.css';
 
 // ─── Time Series Chart (D3) ─────────────────────────────────────
@@ -116,32 +117,66 @@ function ResidualChart({ feederId, timePosition }: { feederId: string; timePosit
 }
 
 // ─── Confidence Evolution Strip ──────────────────────────────────
-function ConfidenceEvolution({ history }: { history: ConfidencePoint[] }) {
+function ConfidenceEvolution({ alert }: { alert: Alert }) {
+    const history = alert.confidenceHistory;
     const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
     const svgRef = useRef<SVGSVGElement>(null);
 
     const width = 280;
     const height = 40;
+    const threshold = 0.90;
+
+    const { minHour, tCritical, domainWidth } = useMemo(() => {
+        if (!history.length) return { minHour: 0, tCritical: 0, domainWidth: 1 };
+        const minHour = history[0].hour;
+        const maxHour = history[history.length - 1].hour;
+        let tCritical = maxHour;
+        if (alert.isEscalating && alert.estimatedTimeToThreshold && alert.estimatedTimeToThreshold > 0) {
+            tCritical = maxHour + alert.estimatedTimeToThreshold;
+        }
+        const domainWidth = Math.max(tCritical - minHour, 1);
+        return { minHour, tCritical, domainWidth };
+    }, [history, alert]);
+
+    const scaleX = (hour: number) => ((hour - minHour) / domainWidth) * width;
+    const scaleY = (conf: number) => height - (conf * (height - 8)) - 4;
 
     const points = useMemo(() => {
-        const xStep = width / (history.length - 1 || 1);
-        return history.map((p, i) => ({
-            x: i * xStep,
-            y: height - (p.confidence * (height - 8)) - 4,
+        return history.map((p) => ({
+            x: scaleX(p.hour),
+            y: scaleY(p.confidence),
             confidence: p.confidence,
+            hour: p.hour,
+            trigger: p.trigger
         }));
-    }, [history]);
+    }, [history, scaleX, scaleY]);
 
     const linePath = useMemo(() => {
         if (points.length < 2) return '';
         return `M ${points.map(p => `${p.x},${p.y}`).join(' L ')}`;
     }, [points]);
 
+    const thresholdY = scaleY(threshold);
+
+    let extPath = '';
+    const currentPoint = history[history.length - 1];
+    if (alert.isEscalating && alert.estimatedTimeToThreshold && alert.estimatedTimeToThreshold > 0 && currentPoint?.confidence < threshold) {
+        extPath = `M ${scaleX(currentPoint.hour)},${scaleY(currentPoint.confidence)} L ${scaleX(tCritical)},${thresholdY}`;
+    }
+
     return (
         <div className="confidence-evolution">
             <h4 className="evidence-section-title">CONFIDENCE GROWTH</h4>
             <div className="confidence-evolution__sparkline-container">
                 <svg ref={svgRef} width={width} height={height} className="confidence-evolution__svg">
+                    {/* Threshold Line */}
+                    <line x1={0} x2={width} y1={thresholdY} y2={thresholdY} stroke="#dc2626" strokeWidth="1" strokeDasharray="4,4" strokeOpacity={0.5} />
+
+                    {/* Extrapolation Line */}
+                    {extPath && (
+                        <path d={extPath} fill="none" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="3,3" />
+                    )}
+
                     <path
                         d={linePath}
                         fill="none"
@@ -160,19 +195,23 @@ function ConfidenceEvolution({ history }: { history: ConfidencePoint[] }) {
                             onMouseLeave={() => setHoveredIdx(null)}
                         />
                     ))}
+                    {/* Critical point at intersection */}
+                    {extPath && (
+                        <circle cx={scaleX(tCritical)} cy={thresholdY} r={3} fill="#f59e0b" stroke="#0f172a" strokeWidth={1} />
+                    )}
                 </svg>
 
-                {hoveredIdx !== null && (
+                {hoveredIdx !== null && points[hoveredIdx] && (
                     <div className="confidence-evolution__tooltip">
                         <span className="confidence-evolution__tooltip-time">
-                            Day {Math.floor(history[hoveredIdx].hour / 24) + 1}, {String(history[hoveredIdx].hour % 24).padStart(2, '0')}:00
+                            Day {Math.floor(points[hoveredIdx].hour / 24) + 1}, {String(points[hoveredIdx].hour % 24).padStart(2, '0')}:00
                         </span>
                         <div className="confidence-evolution__tooltip-row">
                             <span className="confidence-evolution__tooltip-conf">
-                                {Math.round(history[hoveredIdx].confidence * 100)}%
+                                {Math.round(points[hoveredIdx].confidence * 100)}%
                             </span>
                             <span className="confidence-evolution__tooltip-trigger">
-                                {history[hoveredIdx].trigger}
+                                {points[hoveredIdx].trigger}
                             </span>
                         </div>
                     </div>
@@ -298,8 +337,11 @@ export default function EvidencePanel() {
                         ))}
                     </div>
 
+                    {/* Escalation Forecast */}
+                    <PredictionBox alertId={activeAlert.id} />
+
                     {/* Confidence evolution */}
-                    <ConfidenceEvolution history={activeAlert.confidenceHistory} />
+                    <ConfidenceEvolution alert={activeAlert} />
 
                     {/* Comparative context */}
                     <ComparativeContext context={activeAlert.comparativeContext} />
