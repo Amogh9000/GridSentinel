@@ -100,8 +100,35 @@
 }
 
 .alert-card--resolved {
-    opacity: 0.5;
+    opacity: 0.85;
     pointer-events: none;
+}
+
+.alert-card--resolved .alert-card__replay-btn {
+    pointer-events: auto;
+}
+
+.alert-card__replay-btn {
+    margin-top: 10px;
+    width: 100%;
+    padding: 6px 10px;
+    font-family: var(--font-sans);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--accent-blue);
+    background: rgba(41, 128, 185, 0.08);
+    border: 1px solid rgba(41, 128, 185, 0.25);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+    pointer-events: auto;
+}
+
+.alert-card__replay-btn:hover {
+    background: rgba(41, 128, 185, 0.14);
+    border-color: rgba(41, 128, 185, 0.4);
 }
 
 .alert-card__resolution-badge {

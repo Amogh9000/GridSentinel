@@ -104,6 +104,57 @@
     border-radius: 2px;
 }
 
+/* ─── Simulation projection box ───────────────────── */
+.evidence-panel__simulation-box {
+    padding: 12px 14px;
+    background: rgba(180, 83, 9, 0.06);
+    border: 1px dashed rgba(180, 83, 9, 0.5);
+    border-radius: 6px;
+    box-shadow: 0 0 12px rgba(180, 83, 9, 0.08);
+}
+
+.evidence-panel__simulation-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--accent-amber);
+    letter-spacing: 1px;
+    margin: 0 0 10px 0;
+}
+
+.evidence-panel__simulation-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.evidence-panel__simulation-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.evidence-panel__simulation-label {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.evidence-panel__simulation-value {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent-amber);
+}
+
+.evidence-panel__simulation-note {
+    font-family: var(--font-sans);
+    font-size: 9px;
+    color: var(--text-muted);
+    opacity: 0.7;
+    margin: 10px 0 0 0;
+}
+
 .evidence-section-title {
     font-family: var(--font-mono);
     font-size: 10px;

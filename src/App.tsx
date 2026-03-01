@@ -12,12 +12,15 @@ import Timeline from './app/Timeline/Timeline';
 import EvidencePanel from './app/EvidencePanel/EvidencePanel';
 import InvestigationHeader from './app/InvestigationHeader/InvestigationHeader';
 import GeographicContext from './app/GeographicContext/GeographicContext';
+import MapDashboard from './app/MapDashboard/MapDashboard';
+import SimulationPanel from './app/SimulationPanel/SimulationPanel';
 import './App.css';
 
 export default function App() {
   const bootComplete = useUIStore((s) => s.bootComplete);
   const uiState = useUIStore((s) => s.uiState);
   const geoContextVisible = useUIStore((s) => s.geoContextVisible);
+  const viewMode = useUIStore((s) => s.viewMode);
 
   useEffect(() => {
     let cleanup: (() => void) | undefined;
@@ -29,6 +32,8 @@ export default function App() {
     })();
     return () => cleanup?.();
   }, []);
+
+  const is3D = viewMode === '3D';
 
   return (
     <div className={`app app--${uiState}`}>
@@ -42,16 +47,27 @@ export default function App() {
       <InvestigationHeader />
 
       <div className="app__body">
-        <div className={`app__sidebar ${!bootComplete ? 'app__sidebar--hidden' : ''}`}>
-          <AlertFlow />
-        </div>
-        <div className={`app__main ${geoContextVisible ? 'app__main--geo-active' : ''}`}>
-          <GridScene />
-          <EvidencePanel />
-
-          {/* Geographic verification layer — slides in from right */}
-          <GeographicContext />
-        </div>
+        {is3D ? (
+          <>
+            {/* === 3D GLOBE MODE (original layout, untouched) === */}
+            <div className={`app__sidebar ${!bootComplete ? 'app__sidebar--hidden' : ''}`}>
+              <AlertFlow />
+            </div>
+            <div className={`app__main ${geoContextVisible ? 'app__main--geo-active' : ''}`}>
+              <GridScene />
+              <EvidencePanel />
+              <GeographicContext />
+            </div>
+          </>
+        ) : (
+          <>
+            {/* === MAP DASHBOARD MODE (full-width, no sidebar) === */}
+            <div className="app__main app__main--full">
+              <MapDashboard />
+              <SimulationPanel />
+            </div>
+          </>
+        )}
       </div>
 
       <div className={`app__timeline ${!bootComplete ? 'app__timeline--hidden' : ''}`}>
@@ -60,3 +76,4 @@ export default function App() {
     </div>
   );
 }
+

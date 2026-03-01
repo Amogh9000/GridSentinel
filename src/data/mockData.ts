@@ -144,7 +144,7 @@ export const MOCK_ALERTS: Alert[] = [
         ],
         timeWindow: { start: 100, end: 130 },
         createdAt: Date.now() - 10800000,
-        resolution: 'active',
+        resolution: 'deferred',
         confidenceHistory: [
             { hour: 100, confidence: 0.18, trigger: 'Evening elevation flagged' },
             { hour: 110, confidence: 0.35, trigger: 'Multi-day observation' },
@@ -178,7 +178,7 @@ export const MOCK_ALERTS: Alert[] = [
         ],
         timeWindow: { start: 50, end: 70 },
         createdAt: Date.now() - 14400000,
-        resolution: 'active',
+        resolution: 'false_positive',
         confidenceHistory: [
             { hour: 50, confidence: 0.12, trigger: 'Noise-level variance' },
             { hour: 60, confidence: 0.25, trigger: 'Mild persistence' },

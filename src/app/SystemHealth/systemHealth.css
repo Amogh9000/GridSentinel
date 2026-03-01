@@ -67,6 +67,83 @@
     background: var(--border-ui);
 }
 
+.system-health__heatmap-btn {
+    padding: 4px 10px;
+    font-family: var(--font-sans);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid var(--border-ui);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: color 0.2s, background 0.2s, border-color 0.2s;
+}
+
+.system-health__heatmap-btn:hover {
+    color: var(--accent-blue);
+    border-color: var(--accent-blue);
+}
+
+.system-health__heatmap-btn--active {
+    color: var(--accent-blue);
+    background: rgba(41, 99, 235, 0.08);
+    border-color: var(--accent-blue);
+}
+
+.system-health__simulation-btn {
+    padding: 4px 10px;
+    font-family: var(--font-sans);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid var(--border-ui);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: color 0.2s, background 0.2s, border-color 0.2s;
+}
+
+.system-health__simulation-btn:hover {
+    color: var(--accent-amber);
+    border-color: var(--accent-amber);
+}
+
+.system-health__simulation-btn--active {
+    color: var(--accent-amber);
+    background: rgba(180, 83, 9, 0.08);
+    border-color: var(--accent-amber);
+}
+
+.system-health__view-btn {
+    padding: 4px 10px;
+    font-family: var(--font-sans);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid var(--border-ui);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: color 0.2s, background 0.2s, border-color 0.2s;
+}
+
+.system-health__view-btn:hover {
+    color: #0d9488;
+    border-color: #0d9488;
+}
+
+.system-health__view-btn--map {
+    color: #0d9488;
+    background: rgba(13, 148, 136, 0.08);
+    border-color: #0d9488;
+}
+
 .system-health__spacer {
     flex: 1;
 }

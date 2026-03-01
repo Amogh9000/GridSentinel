@@ -4,20 +4,40 @@ import { useUIStore } from '../../state/uiStore';
 import gsap from 'gsap';
 import './alertFlow.css';
 
-function AlertCard({ alert, isActive, isLocked }: { alert: Alert; isActive: boolean; isLocked: boolean }) {
+function AlertCard({
+    alert,
+    isActive,
+    isLocked,
+    isResolved,
+    onReplayClick,
+}: {
+    alert: Alert;
+    isActive: boolean;
+    isLocked: boolean;
+    isResolved: boolean;
+    onReplayClick?: () => void;
+}) {
     const setActiveAlert = useAlertStore((s) => s.setActiveAlert);
     const enterInvestigation = useUIStore((s) => s.enterInvestigation);
+    const stopReplay = useUIStore((s) => s.stopReplay);
+    const appMode = useUIStore((s) => s.appMode);
+    const replayMode = appMode === 'replay';
 
     const handleClick = () => {
         if (isLocked && !isActive) return;
         if (isActive) return; // exit is handled by InvestigationHeader
+        if (replayMode) stopReplay();
         setActiveAlert(alert.id);
         enterInvestigation(alert.feederId);
     };
 
+    const handleReplayClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (onReplayClick) onReplayClick();
+    };
+
     const confidencePercent = Math.round(alert.confidence * 100);
     const persistencePercent = Math.round(alert.persistenceScore * 100);
-    const isResolved = alert.resolution !== 'active';
 
     return (
         <div
@@ -60,14 +80,26 @@ function AlertCard({ alert, isActive, isLocked }: { alert: Alert; isActive: bool
                     <p className="alert-card__more">See full evidence below ↓</p>
                 </div>
             )}
+
+            {isResolved && (
+                <button
+                    type="button"
+                    className="alert-card__replay-btn"
+                    onClick={handleReplayClick}
+                    title="Replay incident confidence progression"
+                >
+                    Replay Incident
+                </button>
+            )}
         </div>
     );
 }
 
 function AuditTrail() {
     const auditTrail = useAlertStore((s) => s.auditTrail);
+    const appMode = useUIStore((s) => s.appMode);
 
-    if (auditTrail.length === 0) return null;
+    if (appMode !== 'live') return null;
 
     return (
         <div className="audit-trail">
@@ -92,8 +124,11 @@ export default function AlertFlow() {
     const containerRef = useRef<HTMLDivElement>(null);
     const alerts = useAlertStore((s) => s.alerts);
     const activeAlertId = useAlertStore((s) => s.activeAlertId);
-    const uiState = useUIStore((s) => s.uiState);
+    const setActiveAlert = useAlertStore((s) => s.setActiveAlert);
+    const appMode = useUIStore((s) => s.appMode);
     const bootComplete = useUIStore((s) => s.bootComplete);
+    const enterInvestigation = useUIStore((s) => s.enterInvestigation);
+    const startReplay = useUIStore((s) => s.startReplay);
     const isLocked = activeAlertId !== null;
 
     // Slide-in animation on boot complete
@@ -128,7 +163,7 @@ export default function AlertFlow() {
         <div className={`alert-flow ${!bootComplete ? 'alert-flow--hidden' : ''}`} ref={containerRef}>
             <div className="alert-flow__header">
                 <h2 className="alert-flow__title">Action Queue</h2>
-                <span className="alert-flow__state-badge" data-state={uiState}>{uiState}</span>
+                <span className="alert-flow__state-badge" data-state={appMode}>{appMode}</span>
             </div>
 
             <div className="alert-flow__list">
@@ -138,6 +173,7 @@ export default function AlertFlow() {
                         alert={alert}
                         isActive={alert.id === activeAlertId}
                         isLocked={isLocked}
+                        isResolved={false}
                     />
                 ))}
             </div>
@@ -160,6 +196,7 @@ export default function AlertFlow() {
                                     alert={alert}
                                     isActive={alert.id === activeAlertId}
                                     isLocked={isLocked}
+                                    isResolved={false}
                                 />
                             ))}
                         </div>
@@ -175,8 +212,14 @@ export default function AlertFlow() {
                         <AlertCard
                             key={alert.id}
                             alert={alert}
-                            isActive={false}
+                            isActive={alert.id === activeAlertId}
                             isLocked={true}
+                            isResolved={true}
+                            onReplayClick={() => {
+                                setActiveAlert(alert.id);
+                                enterInvestigation(alert.feederId);
+                                startReplay();
+                            }}
                         />
                     ))}
                 </div>

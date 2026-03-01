@@ -1,6 +1,8 @@
 import { useEffect, useRef, useMemo, useState } from 'react';
 import { useAlertStore, type ConfidencePoint, type Alert } from '../../state/alertStore';
 import { useUIStore } from '../../state/uiStore';
+import { getDisplayedConfidence } from '../../utils/replayConfidence';
+import { computeProjection } from '../../utils/simulationProjection';
 import { TIMESERIES_DATA } from '../../data/mockData';
 import * as d3 from 'd3';
 import gsap from 'gsap';
@@ -284,10 +286,29 @@ export default function EvidencePanel() {
     const activeAlertId = useAlertStore((s) => s.activeAlertId);
     const alerts = useAlertStore((s) => s.alerts);
     const timePosition = useUIStore((s) => s.timePosition);
+    const replayProgress = useUIStore((s) => s.replayProgress);
+    const appMode = useUIStore((s) => s.appMode);
+    const isReplaying = appMode === 'replay';
+    const isSimulating = appMode === 'simulation';
+    const deviationPercent = useUIStore((s) => s.deviationPercent);
+    const persistenceDays = useUIStore((s) => s.persistenceDays);
+    const affectedFeeders = useUIStore((s) => s.affectedFeeders);
 
     const activeAlert = useMemo(
         () => alerts.find((a) => a.id === activeAlertId) ?? null,
         [alerts, activeAlertId]
+    );
+
+    const displayedConfidence = activeAlert
+        ? getDisplayedConfidence(isReplaying, replayProgress, timePosition, activeAlert)
+        : 0;
+
+    const simulationProjection = useMemo(
+        () =>
+            isSimulating
+                ? computeProjection({ deviationPercent, persistenceDays, affectedFeeders })
+                : null,
+        [isSimulating, deviationPercent, persistenceDays, affectedFeeders]
     );
 
     useEffect(() => {
@@ -309,26 +330,68 @@ export default function EvidencePanel() {
                 <div className="evidence-panel__title-row">
                     <h3 className="evidence-panel__title">Evidence: {activeAlert.feederName}</h3>
                     <span className="evidence-panel__confidence-badge">
-                        {Math.round(activeAlert.confidence * 100)}% confidence
+                        {Math.round(displayedConfidence * 100)}% confidence
                     </span>
                 </div>
+                {isReplaying && (
+                    <div className="evidence-panel__replay-indicator">
+                        REPLAY ACTIVE · {Math.round(replayProgress * 100)}%
+                    </div>
+                )}
             </div>
 
             <div className="evidence-panel__content">
                 {/* Left column: charts */}
-                <div className="evidence-panel__charts">
-                    <div className="evidence-panel__chart-container">
-                        <h4 className="evidence-panel__chart-label">Feeder Draw vs Billed Load</h4>
-                        <TimeSeriesChart feederId={activeAlert.feederId} timePosition={timePosition} />
+                {isSimulating ? (
+                    <div className="evidence-panel__simulation-header">
+                        <span className="evidence-panel__mode-badge">SIMULATION</span>
+                        <h3>Projections</h3>
                     </div>
-                    <div className="evidence-panel__chart-container">
-                        <h4 className="evidence-panel__chart-label">Residual Energy Deviation</h4>
-                        <ResidualChart feederId={activeAlert.feederId} timePosition={timePosition} />
+                ) : (
+                    <div className="evidence-panel__charts">
+                        <div className="evidence-panel__chart-container">
+                            <h4 className="evidence-panel__chart-label">Feeder Draw vs Billed Load</h4>
+                            <TimeSeriesChart feederId={activeAlert.feederId} timePosition={timePosition} />
+                        </div>
+                        <div className="evidence-panel__chart-container">
+                            <h4 className="evidence-panel__chart-label">Residual Energy Deviation</h4>
+                            <ResidualChart feederId={activeAlert.feederId} timePosition={timePosition} />
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {/* Right column: insights */}
                 <div className="evidence-panel__insights">
+                    {/* Projected Scenario Impact (simulation mode only) */}
+                    {isSimulating && simulationProjection && (
+                        <div className="evidence-panel__simulation-box">
+                            <h4 className="evidence-panel__simulation-title">Projected Scenario Impact</h4>
+                            <div className="evidence-panel__simulation-grid">
+                                <div className="evidence-panel__simulation-item">
+                                    <span className="evidence-panel__simulation-label">Estimated Revenue Exposure</span>
+                                    <span className="evidence-panel__simulation-value">
+                                        ₹{Math.round(simulationProjection.projectedImpact).toLocaleString()}
+                                    </span>
+                                </div>
+                                <div className="evidence-panel__simulation-item">
+                                    <span className="evidence-panel__simulation-label">Projected Confidence</span>
+                                    <span className="evidence-panel__simulation-value">
+                                        {Math.round(simulationProjection.projectedConfidence * 100)}%
+                                    </span>
+                                </div>
+                                <div className="evidence-panel__simulation-item">
+                                    <span className="evidence-panel__simulation-label">Estimated Escalation</span>
+                                    <span className="evidence-panel__simulation-value">
+                                        {simulationProjection.projectedEscalationHours >= 24
+                                            ? `${Math.round(simulationProjection.projectedEscalationHours / 24)} days`
+                                            : `${simulationProjection.projectedEscalationHours} hours`}
+                                    </span>
+                                </div>
+                            </div>
+                            <p className="evidence-panel__simulation-note">Simulated — not real data</p>
+                        </div>
+                    )}
+
                     {/* Explanation */}
                     <div className="evidence-panel__explanation">
                         <h4 className="evidence-section-title">WHY THIS ALERT EXISTS</h4>
