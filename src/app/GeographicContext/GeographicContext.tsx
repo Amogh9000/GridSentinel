@@ -2,6 +2,7 @@ import { useEffect, useRef, useMemo } from 'react';
 import { useUIStore } from '../../state/uiStore';
 import { useAlertStore } from '../../state/alertStore';
 import { useGridStore } from '../../state/gridStore';
+import { getMaxImpact, getNormalizedImpact, impactColorScale } from '../../utils/heatmapScale';
 import { GEO_ZONES, BANGALORE_CENTER, BANGALORE_BOUNDS, BANGALORE_LANDMARKS } from '../../data/geoData';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -21,6 +22,7 @@ export default function GeographicContext() {
     const geoContextVisible = useUIStore((s) => s.geoContextVisible);
     const hideGeoContext = useUIStore((s) => s.hideGeoContext);
     const focusedFeederId = useUIStore((s) => s.focusedFeederId);
+    const heatmapMode = useUIStore((s) => s.heatmapMode);
     const alerts = useAlertStore((s) => s.alerts);
     const feeders = useGridStore((s) => s.feeders);
     const enterInvestigation = useUIStore((s) => s.enterInvestigation);
@@ -67,6 +69,8 @@ export default function GeographicContext() {
                 subdomains: 'abcd',
             }).addTo(map);
 
+            const maxImpact = getMaxImpact(alerts);
+
             // Add zone polygons
             GEO_ZONES.forEach((zone) => {
                 const feeder = feeders.find((f) => f.id === zone.feederId);
@@ -74,12 +78,19 @@ export default function GeographicContext() {
                 const confidence = alert?.confidence ?? feeder?.confidence ?? 0.5;
                 const status = feeder?.status ?? 'normal';
 
+                const fillColor = heatmapMode && alert
+                    ? impactColorScale(getNormalizedImpact(alert.economicImpact, maxImpact))
+                    : (STATUS_COLORS[status] ?? STATUS_COLORS.normal);
+                const fillOpacity = heatmapMode && alert
+                    ? 0.3 + getNormalizedImpact(alert.economicImpact, maxImpact) * 0.4
+                    : confidence * 0.45;
+
                 const polygon = L.polygon(zone.polygon as L.LatLngExpression[], {
-                    color: STATUS_COLORS[status] ?? STATUS_COLORS.normal,
+                    color: fillColor,
                     weight: 1.5,
                     opacity: 0.6,
-                    fillColor: STATUS_COLORS[status] ?? STATUS_COLORS.normal,
-                    fillOpacity: confidence * 0.45,
+                    fillColor,
+                    fillOpacity,
                     className: zone.feederId === focusedFeederId ? 'geo-polygon--active' : 'geo-polygon',
                 }).addTo(map);
 
@@ -142,19 +153,50 @@ export default function GeographicContext() {
         return () => {
             clearTimeout(timer);
         };
-    }, [geoContextVisible, feeders, alerts, focusedFeederId, enterInvestigation, setActiveAlert]);
+    }, [geoContextVisible, feeders, alerts, focusedFeederId, heatmapMode, enterInvestigation, setActiveAlert]);
 
-    // Update polygon styles when focus changes
+    // Update polygon styles when focus or heatmap mode changes
     useEffect(() => {
+        if (!mapRef.current || !geoContextVisible) return;
+
+        const maxImpact = getMaxImpact(alerts);
+
         polygonsRef.current.forEach((polygon, feederId) => {
             const el = polygon.getElement();
             if (!el) return;
+
             if (feederId === focusedFeederId) {
                 el.classList.add('geo-polygon--active');
                 el.classList.remove('geo-polygon');
             } else {
                 el.classList.remove('geo-polygon--active');
                 el.classList.add('geo-polygon');
+            }
+
+            const zone = GEO_ZONES.find((z) => z.feederId === feederId);
+            const feeder = feeders.find((f) => f.id === feederId);
+            const alert = alerts.find((a) => a.feederId === feederId);
+            const confidence = alert?.confidence ?? feeder?.confidence ?? 0.5;
+            const status = feeder?.status ?? 'normal';
+
+            if (heatmapMode && alert) {
+                const norm = getNormalizedImpact(alert.economicImpact, maxImpact);
+                polygon.setStyle({
+                    fillColor: impactColorScale(norm),
+                    fillOpacity: 0.3 + norm * 0.4,
+                    color: impactColorScale(norm),
+                    weight: 1.5,
+                    opacity: 0.6,
+                });
+            } else {
+                const styleColor = STATUS_COLORS[status] ?? STATUS_COLORS.normal;
+                polygon.setStyle({
+                    fillColor: styleColor,
+                    fillOpacity: confidence * 0.45,
+                    color: styleColor,
+                    weight: 1.5,
+                    opacity: 0.6,
+                });
             }
         });
 
@@ -167,7 +209,7 @@ export default function GeographicContext() {
                 mapRef.current.panTo(center, { animate: true, duration: 0.5 });
             }
         }
-    }, [focusedFeederId]);
+    }, [focusedFeederId, heatmapMode, alerts, feeders, geoContextVisible]);
 
     // Cleanup map on unmount or when hidden
     useEffect(() => {

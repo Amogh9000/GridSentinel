@@ -18,7 +18,22 @@ interface UIStoreState {
     bootComplete: boolean;
     investigationFrozen: boolean;
     geoContextVisible: boolean;
+    heatmapMode: boolean;
+    replayMode: boolean;
+    replayProgress: number;
+    simulationMode: boolean;
+    deviationPercent: number;
+    persistenceDays: number;
+    affectedFeeders: number;
     setUIState: (state: UIState) => void;
+    toggleSimulation: () => void;
+    setDeviationPercent: (n: number) => void;
+    setPersistenceDays: (n: number) => void;
+    setAffectedFeeders: (n: number) => void;
+    toggleHeatmap: () => void;
+    startReplay: () => void;
+    stopReplay: () => void;
+    setReplayProgress: (value: number) => void;
     setFocusedFeeder: (id: string | null) => void;
     setTimePosition: (hour: number) => void;
     storeCameraPosition: (pos: CameraSnapshot) => void;
@@ -47,6 +62,13 @@ export const useUIStore = create<UIStoreState>((set) => ({
     bootComplete: false,
     investigationFrozen: false,
     geoContextVisible: false,
+    heatmapMode: false,
+    replayMode: false,
+    replayProgress: 0,
+    simulationMode: false,
+    deviationPercent: 10,
+    persistenceDays: 3,
+    affectedFeeders: 1,
 
     setUIState: (uiState) =>
         set({
@@ -57,6 +79,14 @@ export const useUIStore = create<UIStoreState>((set) => ({
 
     setFocusedFeeder: (id) => set({ focusedFeederId: id }),
     setTimePosition: (hour) => set({ timePosition: Math.max(0, Math.min(167, hour)) }),
+    startReplay: () => set({ replayMode: true, replayProgress: 0 }),
+    stopReplay: () =>
+        set({
+            replayMode: false,
+            replayProgress: 0,
+            timePosition: 167,
+        }),
+    setReplayProgress: (value) => set({ replayProgress: Math.max(0, Math.min(1, value)) }),
     storeCameraPosition: (pos) => set({ storedCameraPosition: pos }),
 
     setBootComplete: () =>
@@ -93,4 +123,15 @@ export const useUIStore = create<UIStoreState>((set) => ({
         }),
 
     hideGeoContext: () => set({ geoContextVisible: false }),
+
+    toggleHeatmap: () =>
+        set((state) => ({
+            heatmapMode: !state.heatmapMode,
+            ...(state.replayMode ? { replayMode: false, replayProgress: 0, timePosition: 167 } : {}),
+        })),
+
+    toggleSimulation: () => set((state) => ({ simulationMode: !state.simulationMode })),
+    setDeviationPercent: (n) => set({ deviationPercent: Math.max(0, Math.min(50, n)) }),
+    setPersistenceDays: (n) => set({ persistenceDays: Math.max(0, Math.min(14, n)) }),
+    setAffectedFeeders: (n) => set({ affectedFeeders: Math.max(1, Math.min(20, n)) }),
 }));

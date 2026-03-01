@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { useGridStore, type Feeder, type FeederStatus } from '../../state/gridStore';
 import { useUIStore } from '../../state/uiStore';
 import { useAlertStore } from '../../state/alertStore';
+import { getMaxImpact, getNormalizedImpact, impactColorScale } from '../../utils/heatmapScale';
 import gsap from 'gsap';
 import './gridScene.css';
 
@@ -21,7 +22,7 @@ const STATUS_EMISSIVE: Record<FeederStatus, string> = {
 };
 
 // ─── Single feeder node ──────────────────────────────────────────
-function FeederNode({ feeder }: { feeder: Feeder }) {
+function FeederNode({ feeder, feederIndex }: { feeder: Feeder; feederIndex: number }) {
     const meshRef = useRef<THREE.Mesh>(null);
     const glowRef = useRef<THREE.Mesh>(null);
     const matRef = useRef<THREE.MeshStandardMaterial>(null);
@@ -29,21 +30,71 @@ function FeederNode({ feeder }: { feeder: Feeder }) {
     const animationSpeed = useUIStore((s) => s.animationSpeed);
     const focusedFeederId = useUIStore((s) => s.focusedFeederId);
     const uiState = useUIStore((s) => s.uiState);
+    const heatmapMode = useUIStore((s) => s.heatmapMode);
+    const simulationMode = useUIStore((s) => s.simulationMode);
+    const affectedFeeders = useUIStore((s) => s.affectedFeeders);
+    const replayMode = useUIStore((s) => s.replayMode);
+    const replayProgress = useUIStore((s) => s.replayProgress);
     const enterInvestigation = useUIStore((s) => s.enterInvestigation);
     const setActiveAlert = useAlertStore((s) => s.setActiveAlert);
     const alerts = useAlertStore((s) => s.alerts);
+    const activeAlertId = useAlertStore((s) => s.activeAlertId);
+
+    const activeAlert = useMemo(() => alerts.find((a) => a.id === activeAlertId), [alerts, activeAlertId]);
+    const isReplayFeeder = Boolean(replayMode && activeAlert?.feederId === feeder.id);
+    const replayGlowIntensity = 0.1 + replayProgress * 0.7; // base 0.1 → max 0.8
+
+    // Simulation overlay: first N feeders get subtle amber glow (no real state change)
+    const isSimulatedFeeder = Boolean(simulationMode && feederIndex < affectedFeeders);
+    const simulationGlowIntensity = 0.25;
 
     const isFocused = focusedFeederId === feeder.id;
     const isInvestigating = uiState === 'investigation';
     const isDimmed = isInvestigating && !isFocused;
 
-    const color = new THREE.Color(STATUS_COLORS[feeder.status]);
-    const emissiveColor = new THREE.Color(STATUS_EMISSIVE[feeder.status]);
+    const alert = useMemo(() => alerts.find((a) => a.feederId === feeder.id), [alerts, feeder.id]);
+    const maxImpact = useMemo(() => getMaxImpact(alerts), [alerts]);
+    const normalizedImpact = alert ? getNormalizedImpact(alert.economicImpact, maxImpact) : 0;
+    const heatColor = impactColorScale(normalizedImpact);
 
-    // Pulse animation for suspicious/anomaly feeders
+    const displayColor =
+        isSimulatedFeeder
+            ? '#b45309'
+            : isReplayFeeder
+                ? STATUS_COLORS[feeder.status]
+                : heatmapMode
+                    ? (alert ? heatColor : '#94a3b8')
+                    : STATUS_COLORS[feeder.status];
+    const displayEmissive =
+        isSimulatedFeeder
+            ? '#b45309'
+            : isReplayFeeder
+                ? STATUS_EMISSIVE[feeder.status]
+                : heatmapMode
+                    ? (alert ? heatColor : '#94a3b8')
+                    : STATUS_EMISSIVE[feeder.status];
+    const displayEmissiveIntensity = isSimulatedFeeder
+        ? simulationGlowIntensity
+        : isReplayFeeder
+            ? replayGlowIntensity
+            : heatmapMode
+                ? (alert ? normalizedImpact * 2 : 0.02)
+                : (isDimmed ? 0.02 : feeder.status === 'anomaly' ? 0.8 : feeder.status === 'suspicious' ? 0.4 : 0.05);
+    const displayGlowColor = isSimulatedFeeder
+        ? '#b45309'
+        : isReplayFeeder
+            ? STATUS_COLORS[feeder.status]
+            : heatmapMode && alert
+                ? heatColor
+                : STATUS_COLORS[feeder.status];
+
+    const color = new THREE.Color(displayColor);
+    const emissiveColor = new THREE.Color(displayEmissive);
+
+    // Pulse animation for suspicious/anomaly feeders (disabled in heatmap mode)
     useEffect(() => {
         if (!meshRef.current) return;
-        if (feeder.status === 'normal' || isDimmed) {
+        if (heatmapMode || feeder.status === 'normal' || isDimmed) {
             gsap.killTweensOf(meshRef.current.scale);
             gsap.set(meshRef.current.scale, { x: 1, y: 1, z: 1 });
             return;
@@ -55,14 +106,33 @@ function FeederNode({ feeder }: { feeder: Feeder }) {
             duration, ease: 'sine.inOut', yoyo: true, repeat: -1,
         });
         return () => { tween.kill(); };
-    }, [feeder.status, animationSpeed, isDimmed]);
+    }, [heatmapMode, feeder.status, animationSpeed, isDimmed]);
 
-    // Glow pulse
+    // Glow: replay uses progress-based intensity; heatmap uses impact; otherwise status-based pulse
     useFrame(() => {
         if (!glowRef.current) return;
         const mat = glowRef.current.material as THREE.MeshBasicMaterial;
         if (isDimmed) {
             mat.opacity = 0;
+            return;
+        }
+        if (isSimulatedFeeder) {
+            mat.color.set(displayGlowColor);
+            mat.opacity = 0.35;
+            return;
+        }
+        if (isReplayFeeder) {
+            mat.color.set(displayGlowColor);
+            mat.opacity = 0.2 + replayGlowIntensity * 0.6;
+            return;
+        }
+        if (heatmapMode) {
+            if (alert) {
+                mat.color.set(displayGlowColor);
+                mat.opacity = 0.3 + normalizedImpact * 0.5;
+            } else {
+                mat.opacity = 0;
+            }
             return;
         }
         if (feeder.status === 'anomaly') {
@@ -123,7 +193,7 @@ function FeederNode({ feeder }: { feeder: Feeder }) {
                     ref={matRef}
                     color={color}
                     emissive={emissiveColor}
-                    emissiveIntensity={isDimmed ? 0.02 : feeder.status === 'anomaly' ? 0.8 : feeder.status === 'suspicious' ? 0.4 : 0.05}
+                    emissiveIntensity={displayEmissiveIntensity}
                     roughness={0.6}
                     metalness={0.3}
                     transparent
@@ -134,7 +204,7 @@ function FeederNode({ feeder }: { feeder: Feeder }) {
             <mesh ref={glowRef} scale={[1.8, 1.8, 1.8]}>
                 <icosahedronGeometry args={[0.35, 1]} />
                 <meshBasicMaterial
-                    color={STATUS_COLORS[feeder.status]}
+                    color={displayGlowColor}
                     transparent
                     opacity={0}
                     depthWrite={false}
@@ -279,8 +349,8 @@ export default function GridScene() {
 
                 <CameraController />
                 <ConnectionLines />
-                {feeders.map((feeder) => (
-                    <FeederNode key={feeder.id} feeder={feeder} />
+                {feeders.map((feeder, i) => (
+                    <FeederNode key={feeder.id} feeder={feeder} feederIndex={i} />
                 ))}
 
                 <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]}>

@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react';
+import { useUIStore } from '../../state/uiStore';
 import { SYSTEM_HEALTH } from '../../data/mockData';
 import './systemHealth.css';
 
 export default function SystemHealth() {
     const [health] = useState(SYSTEM_HEALTH);
     const [now, setNow] = useState(Date.now());
+    const heatmapMode = useUIStore((s) => s.heatmapMode);
+    const toggleHeatmap = useUIStore((s) => s.toggleHeatmap);
+    const simulationMode = useUIStore((s) => s.simulationMode);
+    const toggleSimulation = useUIStore((s) => s.toggleSimulation);
 
     // Tick every second for relative times
     useEffect(() => {
@@ -48,6 +53,28 @@ export default function SystemHealth() {
                     {Math.round(health.dataFreshness * 100)}%
                 </span>
             </div>
+
+            <div className="system-health__divider" />
+
+            <button
+                type="button"
+                className={`system-health__heatmap-btn ${heatmapMode ? 'system-health__heatmap-btn--active' : ''}`}
+                onClick={toggleHeatmap}
+                title="Toggle revenue risk (economic impact) coloring"
+            >
+                Revenue Risk View
+            </button>
+
+            <div className="system-health__divider" />
+
+            <button
+                type="button"
+                className={`system-health__simulation-btn ${simulationMode ? 'system-health__simulation-btn--active' : ''}`}
+                onClick={toggleSimulation}
+                title="Simulate future anomaly scenarios"
+            >
+                Simulation Mode
+            </button>
 
             <div className="system-health__spacer" />
 
