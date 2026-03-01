@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 
 export type UIState = 'boot' | 'monitoring' | 'suspicion' | 'investigation' | 'resolution';
+export type AppMode = 'idle' | 'loading' | 'live' | 'replay' | 'simulation';
+export type ViewMode = '2D' | '3D';
 
 interface CameraSnapshot {
     x: number;
@@ -18,30 +20,58 @@ interface UIStoreState {
     bootComplete: boolean;
     investigationFrozen: boolean;
     geoContextVisible: boolean;
-    heatmapMode: boolean;
+    cameraZoom: number;
+
+    // App mode & view
+    appMode: AppMode;
+    viewMode: ViewMode;
+    coreReady: boolean;
+    isSidePanelOpen: boolean;
+
+    // Replay
     replayMode: boolean;
     replayProgress: number;
+
+    // Heatmap & Simulation toggles
+    heatmapMode: boolean;
     simulationMode: boolean;
+
+    // Simulation parameters
     deviationPercent: number;
     persistenceDays: number;
     affectedFeeders: number;
+
+    // Actions
     setUIState: (state: UIState) => void;
-    toggleSimulation: () => void;
-    setDeviationPercent: (n: number) => void;
-    setPersistenceDays: (n: number) => void;
-    setAffectedFeeders: (n: number) => void;
-    toggleHeatmap: () => void;
-    startReplay: () => void;
-    stopReplay: () => void;
-    setReplayProgress: (value: number) => void;
     setFocusedFeeder: (id: string | null) => void;
     setTimePosition: (hour: number) => void;
     storeCameraPosition: (pos: CameraSnapshot) => void;
+    setCameraZoom: (zoom: number) => void;
     setBootComplete: () => void;
     enterInvestigation: (feederId: string) => void;
     exitInvestigation: () => void;
     showGeoContext: () => void;
     hideGeoContext: () => void;
+
+    // App mode & view actions
+    setAppMode: (mode: AppMode) => void;
+    setViewMode: (mode: ViewMode) => void;
+    setCoreReady: (ready: boolean) => void;
+    toggleSidePanel: () => void;
+
+    // Replay actions
+    startReplay: () => void;
+    stopReplay: () => void;
+    setReplayProgress: (progress: number) => void;
+
+    // Toggle actions
+    toggleHeatmap: () => void;
+    toggleSimulation: () => void;
+
+    // Simulation parameter actions
+    setDeviationPercent: (val: number) => void;
+    setPersistenceDays: (val: number) => void;
+    setAffectedFeeders: (val: number) => void;
 }
 
 const STATE_CONFIG: Record<UIState, { animationSpeed: number; saturation: number }> = {
@@ -62,13 +92,28 @@ export const useUIStore = create<UIStoreState>((set) => ({
     bootComplete: false,
     investigationFrozen: false,
     geoContextVisible: false,
-    heatmapMode: false,
+    cameraZoom: 1.0,
+
+    // App mode & view defaults
+    appMode: 'live',
+    viewMode: '3D',
+    coreReady: true,
+    isSidePanelOpen: false,
+
+    // Replay defaults
     replayMode: false,
     replayProgress: 0,
+
+    // Toggle defaults
+    heatmapMode: false,
     simulationMode: false,
+
+    // Simulation parameter defaults
     deviationPercent: 10,
     persistenceDays: 3,
-    affectedFeeders: 1,
+    affectedFeeders: 2,
+
+    // --- Actions ---
 
     setUIState: (uiState) =>
         set({
@@ -79,15 +124,8 @@ export const useUIStore = create<UIStoreState>((set) => ({
 
     setFocusedFeeder: (id) => set({ focusedFeederId: id }),
     setTimePosition: (hour) => set({ timePosition: Math.max(0, Math.min(167, hour)) }),
-    startReplay: () => set({ replayMode: true, replayProgress: 0 }),
-    stopReplay: () =>
-        set({
-            replayMode: false,
-            replayProgress: 0,
-            timePosition: 167,
-        }),
-    setReplayProgress: (value) => set({ replayProgress: Math.max(0, Math.min(1, value)) }),
     storeCameraPosition: (pos) => set({ storedCameraPosition: pos }),
+    setCameraZoom: (zoom) => set({ cameraZoom: Math.max(0.4, Math.min(4.0, zoom)) }),
 
     setBootComplete: () =>
         set({
@@ -124,14 +162,27 @@ export const useUIStore = create<UIStoreState>((set) => ({
 
     hideGeoContext: () => set({ geoContextVisible: false }),
 
-    toggleHeatmap: () =>
+    // App mode & view actions
+    setAppMode: (appMode) => set({ appMode }),
+    setViewMode: (viewMode) => set({ viewMode }),
+    setCoreReady: (coreReady) => set({ coreReady }),
+    toggleSidePanel: () => set((state) => ({ isSidePanelOpen: !state.isSidePanelOpen })),
+
+    // Replay actions
+    startReplay: () => set({ replayMode: true, replayProgress: 0, appMode: 'replay' }),
+    stopReplay: () => set({ replayMode: false, replayProgress: 0, appMode: 'live' }),
+    setReplayProgress: (replayProgress) => set({ replayProgress }),
+
+    // Toggle actions
+    toggleHeatmap: () => set((state) => ({ heatmapMode: !state.heatmapMode })),
+    toggleSimulation: () =>
         set((state) => ({
-            heatmapMode: !state.heatmapMode,
-            ...(state.replayMode ? { replayMode: false, replayProgress: 0, timePosition: 167 } : {}),
+            simulationMode: !state.simulationMode,
+            appMode: !state.simulationMode ? 'simulation' : 'live',
         })),
 
-    toggleSimulation: () => set((state) => ({ simulationMode: !state.simulationMode })),
-    setDeviationPercent: (n) => set({ deviationPercent: Math.max(0, Math.min(50, n)) }),
-    setPersistenceDays: (n) => set({ persistenceDays: Math.max(0, Math.min(14, n)) }),
-    setAffectedFeeders: (n) => set({ affectedFeeders: Math.max(1, Math.min(20, n)) }),
+    // Simulation parameter actions
+    setDeviationPercent: (deviationPercent) => set({ deviationPercent }),
+    setPersistenceDays: (persistenceDays) => set({ persistenceDays }),
+    setAffectedFeeders: (affectedFeeders) => set({ affectedFeeders }),
 }));

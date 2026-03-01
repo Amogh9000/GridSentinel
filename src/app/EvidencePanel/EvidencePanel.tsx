@@ -247,9 +247,10 @@ export default function EvidencePanel() {
     const activeAlertId = useAlertStore((s) => s.activeAlertId);
     const alerts = useAlertStore((s) => s.alerts);
     const timePosition = useUIStore((s) => s.timePosition);
-    const replayMode = useUIStore((s) => s.replayMode);
     const replayProgress = useUIStore((s) => s.replayProgress);
-    const simulationMode = useUIStore((s) => s.simulationMode);
+    const appMode = useUIStore((s) => s.appMode);
+    const isReplaying = appMode === 'replay';
+    const isSimulating = appMode === 'simulation';
     const deviationPercent = useUIStore((s) => s.deviationPercent);
     const persistenceDays = useUIStore((s) => s.persistenceDays);
     const affectedFeeders = useUIStore((s) => s.affectedFeeders);
@@ -260,15 +261,15 @@ export default function EvidencePanel() {
     );
 
     const displayedConfidence = activeAlert
-        ? getDisplayedConfidence(replayMode, replayProgress, timePosition, activeAlert)
+        ? getDisplayedConfidence(isReplaying, replayProgress, timePosition, activeAlert)
         : 0;
 
     const simulationProjection = useMemo(
         () =>
-            simulationMode
+            isSimulating
                 ? computeProjection({ deviationPercent, persistenceDays, affectedFeeders })
                 : null,
-        [simulationMode, deviationPercent, persistenceDays, affectedFeeders]
+        [isSimulating, deviationPercent, persistenceDays, affectedFeeders]
     );
 
     useEffect(() => {
@@ -293,25 +294,37 @@ export default function EvidencePanel() {
                         {Math.round(displayedConfidence * 100)}% confidence
                     </span>
                 </div>
+                {isReplaying && (
+                    <div className="evidence-panel__replay-indicator">
+                        REPLAY ACTIVE · {Math.round(replayProgress * 100)}%
+                    </div>
+                )}
             </div>
 
             <div className="evidence-panel__content">
                 {/* Left column: charts */}
-                <div className="evidence-panel__charts">
-                    <div className="evidence-panel__chart-container">
-                        <h4 className="evidence-panel__chart-label">Feeder Draw vs Billed Load</h4>
-                        <TimeSeriesChart feederId={activeAlert.feederId} timePosition={timePosition} />
+                {isSimulating ? (
+                    <div className="evidence-panel__simulation-header">
+                        <span className="evidence-panel__mode-badge">SIMULATION</span>
+                        <h3>Projections</h3>
                     </div>
-                    <div className="evidence-panel__chart-container">
-                        <h4 className="evidence-panel__chart-label">Residual Energy Deviation</h4>
-                        <ResidualChart feederId={activeAlert.feederId} timePosition={timePosition} />
+                ) : (
+                    <div className="evidence-panel__charts">
+                        <div className="evidence-panel__chart-container">
+                            <h4 className="evidence-panel__chart-label">Feeder Draw vs Billed Load</h4>
+                            <TimeSeriesChart feederId={activeAlert.feederId} timePosition={timePosition} />
+                        </div>
+                        <div className="evidence-panel__chart-container">
+                            <h4 className="evidence-panel__chart-label">Residual Energy Deviation</h4>
+                            <ResidualChart feederId={activeAlert.feederId} timePosition={timePosition} />
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {/* Right column: insights */}
                 <div className="evidence-panel__insights">
                     {/* Projected Scenario Impact (simulation mode only) */}
-                    {simulationMode && simulationProjection && (
+                    {isSimulating && simulationProjection && (
                         <div className="evidence-panel__simulation-box">
                             <h4 className="evidence-panel__simulation-title">Projected Scenario Impact</h4>
                             <div className="evidence-panel__simulation-grid">

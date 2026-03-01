@@ -17,7 +17,7 @@ export interface SimulationProjection {
 }
 
 const BASE_IMPACT = 25000; // ₹ baseline for single feeder, 1 day
-const HOURS_PER_DAY = 24;
+
 
 /**
  * projectedImpact = baseImpact * (1 + deviationPercent/100) * persistenceDays * affectedFeeders

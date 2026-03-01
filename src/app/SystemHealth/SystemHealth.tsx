@@ -10,6 +10,8 @@ export default function SystemHealth() {
     const toggleHeatmap = useUIStore((s) => s.toggleHeatmap);
     const simulationMode = useUIStore((s) => s.simulationMode);
     const toggleSimulation = useUIStore((s) => s.toggleSimulation);
+    const viewMode = useUIStore((s) => s.viewMode);
+    const setViewMode = useUIStore((s) => s.setViewMode);
 
     // Tick every second for relative times
     useEffect(() => {
@@ -74,6 +76,17 @@ export default function SystemHealth() {
                 title="Simulate future anomaly scenarios"
             >
                 Simulation Mode
+            </button>
+
+            <div className="system-health__divider" />
+
+            <button
+                type="button"
+                className={`system-health__view-btn ${viewMode === '2D' ? 'system-health__view-btn--map' : ''}`}
+                onClick={() => setViewMode(viewMode === '3D' ? '2D' : '3D')}
+                title={viewMode === '3D' ? 'Switch to Map Dashboard' : 'Switch to 3D Globe'}
+            >
+                {viewMode === '3D' ? '🗺️ Map View' : '🧊 3D Globe'}
             </button>
 
             <div className="system-health__spacer" />

@@ -32,6 +32,6 @@ export function getNormalizedImpact(impact: number, maxImpact: number): number {
  * Use with normalized impact (0–1).
  */
 export const impactColorScale = d3
-    .scaleLinear<number, string>()
+    .scaleLinear<string>()
     .domain([0, 0.5, 1])
     .range(['#2ecc71', '#f1c40f', '#e74c3c']);

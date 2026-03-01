@@ -20,7 +20,8 @@ function AlertCard({
     const setActiveAlert = useAlertStore((s) => s.setActiveAlert);
     const enterInvestigation = useUIStore((s) => s.enterInvestigation);
     const stopReplay = useUIStore((s) => s.stopReplay);
-    const replayMode = useUIStore((s) => s.replayMode);
+    const appMode = useUIStore((s) => s.appMode);
+    const replayMode = appMode === 'replay';
 
     const handleClick = () => {
         if (isLocked && !isActive) return;
@@ -96,8 +97,9 @@ function AlertCard({
 
 function AuditTrail() {
     const auditTrail = useAlertStore((s) => s.auditTrail);
+    const appMode = useUIStore((s) => s.appMode);
 
-    if (auditTrail.length === 0) return null;
+    if (appMode !== 'live') return null;
 
     return (
         <div className="audit-trail">
@@ -123,7 +125,7 @@ export default function AlertFlow() {
     const alerts = useAlertStore((s) => s.alerts);
     const activeAlertId = useAlertStore((s) => s.activeAlertId);
     const setActiveAlert = useAlertStore((s) => s.setActiveAlert);
-    const uiState = useUIStore((s) => s.uiState);
+    const appMode = useUIStore((s) => s.appMode);
     const bootComplete = useUIStore((s) => s.bootComplete);
     const enterInvestigation = useUIStore((s) => s.enterInvestigation);
     const startReplay = useUIStore((s) => s.startReplay);
@@ -161,7 +163,7 @@ export default function AlertFlow() {
         <div className={`alert-flow ${!bootComplete ? 'alert-flow--hidden' : ''}`} ref={containerRef}>
             <div className="alert-flow__header">
                 <h2 className="alert-flow__title">Action Queue</h2>
-                <span className="alert-flow__state-badge" data-state={uiState}>{uiState}</span>
+                <span className="alert-flow__state-badge" data-state={appMode}>{appMode}</span>
             </div>
 
             <div className="alert-flow__list">

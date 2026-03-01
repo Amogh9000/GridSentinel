@@ -7,31 +7,41 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+
+# Build output
 dist
 dist-ssr
+
+# Local env files
 *.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# Environment
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-# Agent / Tooling
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Agent / AI tooling
 .gemini
 .agent
 brain
-C:\Users\amogh\.gemini\antigravity\brain\*
+
+# Temporary build artifacts
+build_errors.txt
+dev_log.txt

@@ -1,6 +1,6 @@
 import type { ConfidencePoint } from '../state/alertStore';
 
-const TIMELINE_LENGTH = 167;
+
 
 /**
  * Interpolate confidence at a given time from confidenceHistory (by hour).

@@ -36,6 +36,10 @@
   background: var(--bg-primary);
 }
 
+.app__main--full {
+  width: 100%;
+}
+
 .app__timeline {
   flex-shrink: 0;
   transition: opacity 0.6s ease, transform 0.6s ease;

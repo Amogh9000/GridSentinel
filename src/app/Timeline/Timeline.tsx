@@ -7,6 +7,11 @@ export default function Timeline() {
     const trackRef = useRef<HTMLDivElement>(null);
     const timePosition = useUIStore((s) => s.timePosition);
     const setTimePosition = useUIStore((s) => s.setTimePosition);
+    const appMode = useUIStore((s) => s.appMode);
+    const replayMode = appMode === 'replay';
+    const replayProgress = useUIStore((s) => s.replayProgress);
+    const startReplay = useUIStore((s) => s.startReplay);
+    const stopReplay = useUIStore((s) => s.stopReplay);
 
     const handleTrackClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
         if (!trackRef.current) return;
@@ -28,7 +33,35 @@ export default function Timeline() {
     }));
 
     return (
-        <div className="timeline">
+        <div className={`timeline ${replayMode ? 'timeline--replay' : ''}`}>
+            <div className="timeline__controls">
+                {!replayMode ? (
+                    <button className="timeline__btn" onClick={startReplay}>
+                        <span className="timeline__btn-icon">▶</span>
+                        <span className="timeline__btn-text">REPLAY INCIDENT</span>
+                    </button>
+                ) : (
+                    <button className="timeline__btn timeline__btn--active" onClick={stopReplay}>
+                        <span className="timeline__btn-icon">⏹</span>
+                        <span className="timeline__btn-text">EXIT REPLAY</span>
+                    </button>
+                )}
+
+                {replayMode && (
+                    <div className="timeline__progress-container">
+                        <div className="timeline__progress-bar">
+                            <div
+                                className="timeline__progress-fill"
+                                style={{ width: `${replayProgress * 100}%` }}
+                            />
+                        </div>
+                        <span className="timeline__progress-label">
+                            REPLAYING: {Math.round(replayProgress * 100)}%
+                        </span>
+                    </div>
+                )}
+            </div>
+
             <div className="timeline__label">
                 <span className="timeline__label-text">TEMPORAL CONTEXT</span>
                 <span className="timeline__position">

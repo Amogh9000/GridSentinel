@@ -3,13 +3,18 @@ import { useUIStore } from '../../state/uiStore';
 import gsap from 'gsap';
 import './homepage.css';
 
-export default function Homepage() {
+interface HomepageProps {
+    forceVisible?: boolean;
+}
+
+export default function Homepage({ forceVisible = false }: HomepageProps) {
     const overlayRef = useRef<HTMLDivElement>(null);
     const titleRef = useRef<HTMLDivElement>(null);
     const subtitleRef = useRef<HTMLDivElement>(null);
     const signalsRef = useRef<HTMLDivElement>(null);
     const bootComplete = useUIStore((s) => s.bootComplete);
     const setBootComplete = useUIStore((s) => s.setBootComplete);
+    const isVisible = forceVisible || !bootComplete;
 
     useEffect(() => {
         if (bootComplete) return;
@@ -74,7 +79,7 @@ export default function Homepage() {
         return () => { tl.kill(); };
     }, [bootComplete, setBootComplete]);
 
-    if (bootComplete) return null;
+    if (!isVisible) return null;
 
     return (
         <div ref={overlayRef} className="homepage-overlay">
