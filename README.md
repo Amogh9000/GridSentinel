@@ -1,51 +1,87 @@
-# GridSentinel — Mission Control for the Modern Grid
+# GridSentinel
 
-**GridSentinel** is an AI-augmented "Mission Control" platform designed for high-inertia power grid monitoring and fraud detection. Built for the Bangalore Pilot Program (BESCOM), it bridges the gap between raw electrical sensor telemetry and operational field decision-making.
+AI-augmented mission control for power grid monitoring and non-technical loss detection. Built for the Bangalore Pilot Program (BESCOM).
 
-## 🚀 Vision
-In the shift toward decentralized energy and smart grids, detecting "Non-Technical Losses" (energy theft) requires more than simple alerts—it requires spatial awareness and deep evidence trails. GridSentinel provides an immersive environment where AI-driven "hunches" are grounded in 3D grid physics and geographic reality.
+## Overview
 
-## ✨ Core Features
-- **3D Grid Intelligence**: Real-time spatial visualization of electrical nodes and flows using Three.js.
-- **Signal-to-Action Queue**: An intelligent operational sidebar that filters noise, highlighting high-probability energy theft alerts.
-- **Deep Evidence Audit**: High-fidelity D3.js analytics comparing Feeder-Draw vs. Billed-Load residuals.
-- **Geographic Context (Bangalore Pilot)**: Full GIS integration (Leaflet) with street-level orientation landmarks (BSNL, Metro, Substations).
-- **Stability-First UX**: High-visibility "Light Mode" aesthetic with zero-overlay resolution flows to ensure maximum uptime for operators.
+GridSentinel bridges raw electrical sensor telemetry and operational field decision-making. It provides an immersive environment where AI-driven anomaly signals are grounded in 3D grid physics and geographic reality.
 
-## 🛠️ Tech Stack
-- **Frontend**: React 19, TypeScript, Vite
-- **Visuals**: Three.js (3D Grid), D3.js (Analytics), Leaflet (GIS)
-- **Animation**: GSAP (Cinematic UX transitions)
-- **State Management**: Zustand (Inertial state control)
-- **Theme**: Slate-White High-Contrast Mission Control
+## Features
 
-## 📦 Getting Started
+**Dual-View Architecture**
+- 3D Globe — spatial visualization of electrical nodes, connection flows, and anomaly propagation (Three.js)
+- Map Dashboard — full-width Leaflet map with zone polygons, heatmap overlays, and landmark orientation
 
-### Prerequisites
-- Node.js (v18+)
-- npm
+**Revenue Risk View**
+- Toggle economic impact coloring across both views (green/yellow/red gradient scale)
+- Per-zone impact tooltips with AI confidence scores
 
-### Installation
-1. Clone the repository:
-   ```bash
-   git clone [repository-url]
-   cd amd
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Run development server:
-   ```bash
-   npm run dev
-   ```
+**Simulation Mode**
+- Three-parameter stress modelling: load deviation %, persistence days, affected feeders
+- Projected outcome card with escalation risk bar and severity verdict
 
-## 🏗️ Architecture
-GridSentinel follows an **Inertial Operational Pattern**:
-- **alertStore**: Manages signal detection and user resolutions.
-- **uiStore**: Controls camera positions and UX "locking" during investigations.
-- **Services**: Mock telemetry streams for the Bangalore Pilot period.
+**Signal-to-Action Queue**
+- Prioritized alert sidebar with confidence scores, economic impact, and persistence tracking
+- One-click investigation flow with camera lock and evidence drill-down
+
+**Geographic Verification**
+- Bangalore zone polygons mapped to feeder IDs
+- Street-level landmarks (substations, metro stations) for field orientation
+
+**Deep Evidence Audit**
+- D3.js analytics comparing feeder-draw vs. billed-load residuals
+- Confidence history timeline with trigger annotations
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | React 19, TypeScript, Vite |
+| 3D Visualization | Three.js (React Three Fiber, Drei) |
+| 2D Mapping | Leaflet |
+| Analytics | D3.js |
+| Animation | GSAP |
+| State Management | Zustand |
+| Real-time | WebSocket |
+
+## Getting Started
+
+**Prerequisites:** Node.js v18+, npm
+
+```bash
+git clone <repository-url>
+cd amd
+npm install
+npm run dev
+```
+
+Production build:
+```bash
+npm run build
+```
+
+## Architecture
+
+```
+src/
+├── state/          # Zustand stores (uiStore, gridStore, alertStore)
+├── app/            # UI components
+│   ├── GridScene/      # 3D globe (Three.js canvas)
+│   ├── MapDashboard/   # 2D map view (Leaflet)
+│   ├── AlertFlow/      # Action queue sidebar
+│   ├── EvidencePanel/  # Deep audit analytics
+│   ├── SimulationPanel/# Stress scenario modelling
+│   ├── SystemHealth/   # Top bar with view controls
+│   ├── Timeline/       # Temporal context with anomaly bands
+│   └── GeographicContext/ # GIS verification overlay
+├── data/           # Mock telemetry and geo zone data
+├── services/       # API and WebSocket clients
+├── utils/          # Heatmap scales, projection math, replay logic
+└── hooks/          # Custom React hooks
+```
+
+**State flow:** Components subscribe to Zustand stores. The `uiStore` drives view mode (3D/2D), investigation state, camera position, and simulation parameters. The `alertStore` manages signal detection and resolution audit trails.
 
 ---
-*Developed for the BESCOM Intelligence Pilot program.*
 
+*Developed for the BESCOM Intelligence Pilot program. Simulated data — not official utility boundaries.*
